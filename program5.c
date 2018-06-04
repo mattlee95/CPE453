@@ -9,7 +9,7 @@
 
 #include "dbuffer.h"
 
-doublebuff db;
+double_buff db;
 
 int main(void) {
     uint8_t sd_card_status;
