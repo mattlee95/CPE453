@@ -87,7 +87,7 @@ void mutex_unlock(struct mutex_t* m)
     sei();
 }
 
-void sem_init(struct semaphore_t* s, int8_t value)
+void sem_init(struct semaphore_t* s, int16_t value)
 {
     cli();
     s->val = value;

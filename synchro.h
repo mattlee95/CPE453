@@ -16,7 +16,7 @@ struct mutex_t
 
 struct semaphore_t
 {
-    uint8_t val;
+    uint16_t val;
     wait_list_t wait;
 };
 
@@ -28,7 +28,7 @@ void mutex_init(struct mutex_t* m);
 void mutex_lock(struct mutex_t* m);
 void mutex_unlock(struct mutex_t* m);
 
-void sem_init(struct semaphore_t* s, int8_t value);
+void sem_init(struct semaphore_t* s, int16_t value);
 void sem_wait(struct semaphore_t* s);
 void sem_signal(struct semaphore_t* s);
 void sem_signal_swap(struct semaphore_t* s);

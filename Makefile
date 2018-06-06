@@ -10,10 +10,10 @@ DEVICE = /dev/tty.usbmodem1421
 
 #target for part 1
 
-program_3a: os.c serial.c synchro.c program3.c 
-	avr-gcc -mmcu=atmega2560 -DF_CPU=16000000 -O2 -o project3.elf os.c serial.c synchro.c program3.c
-	avr-objcopy -O ihex project3.elf main.hex
-	avr-size project3.elf
+program_5: os.c serial.c synchro.c program5.c SdReader.c dbuffer.c
+	avr-gcc -mmcu=atmega2560 -DF_CPU=16000000 -O2 -o project5.elf os.c serial.c synchro.c program5.c SdReader.c dbuffer.c
+	avr-objcopy -O ihex project5.elf main.hex
+	avr-size project5.elf
 
 #flash the Arduino with the program
 program: main.hex

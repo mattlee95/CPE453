@@ -110,5 +110,6 @@ uint8_t get_thread_id();
 void thread_sleep(uint16_t ticks);
 void remove_sleep();
 
+void start_audio_pwm();
 
 #endif

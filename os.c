@@ -259,7 +259,7 @@ uint8_t get_next_thread(void)
     {
         next_thread = (next_thread + 1) % (sys.num_threads);
     }
-    if (next_thread == 0)
+    /*if (next_thread == 0)
     {
         for (n = 1; n < sys.num_threads; n++)
         {
@@ -269,7 +269,7 @@ uint8_t get_next_thread(void)
             }
         }
         return next_thread;
-    }
+    }*/
     return next_thread;
 }
 
