@@ -31,8 +31,10 @@ int main(void) {
     sd_card_status = sdInit(1);   //initialize the card with slow clock
 
     serial_init(); 
+    
+    //globals_init();
     print_string("HERE");
-
+    
     create_thread("idle", (uint16_t) idle, 0, 500);
     //create_thread("save value", (uint16_t) save_value, &val, 500);
     //create_thread("speak value", (uint16_t) speak_value, 0, 500);
@@ -45,6 +47,15 @@ int main(void) {
 
     os_start();   
     while (1) {}
+}
+/*
+void globals_init(){
+    curr_song_idx = 0;
+    curr_dur = 0;
+    getInfo(num_songs,song_inodes);
+    curr_inode = song_inodes[curr_song_idx];
+    getSongTitle(curr_inode,song_name);
+    getSongDur(curr_inode,&song_dur);
 }
 
 void save_value(int a){
@@ -60,6 +71,7 @@ void save_value(int a){
         sleep(1);
     }
 }
+*/
 
 void display_song_stats()
 {
