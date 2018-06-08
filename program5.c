@@ -47,6 +47,19 @@ int main(void) {
     while (1) {}
 }
 
+void save_value(int a){
+    uint8_t data[1];
+    uint8_t byte;
+    int ret;
+    // What is blockNo
+    readFromSD(blockNo,data,1);
+    byte = data[0];
+    ret = save_to_buffer(&db, byte);
+    while(ret == -1){
+        save_to_buffer(&db, byte);
+        sleep(1);
+    }
+}
 
 void display_song_stats()
 {
