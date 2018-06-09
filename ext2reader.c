@@ -29,6 +29,7 @@ uint32_t findInodeFromBlock(uint32_t blockNo, uint32_t inodeNo, char* name){
 }
 
 void getSongTitle(uint32_t inode, char *name){
+    uint32_t i;
     struct ext2_inode root;
     struct ext2_inode in;
     getInode(2, &root);
@@ -61,7 +62,7 @@ void readFromSD(uint32_t blockNo, uint8_t *data, uint16_t offset, uint16_t size)
     uint32_t bn = 2*blockNo;
     uint16_t os = 0;
     if(offset>512){
-        bn+=1
+        bn+=1;
         os+=offset%512;
     }
     sdReadData(bn,os,data,size);
@@ -86,16 +87,16 @@ void getSongByte(uint32_t inode_number,uint32_t byteLoc, uint8_t *data){
         whichBlock -= 12;
         uint32_t singlyIndirect[256];
         readBlock(in.i_block[12],(uint8_t*)singlyIndirect);
-        blockNo = singlyIndirect[whichBlock]
+        blockNo = singlyIndirect[whichBlock];
     }else{ //Doubly Indirect
-        whichBlock -= (12+256)
+        whichBlock -= (12+256);
         uint32_t doublyIndirect[256];
         uint32_t singlyIndirect[256];
         readBlock(in.i_block[13],(uint8_t*)doublyIndirect);
         readBlock(doublyIndirect[whichBlock/256],(uint8_t*)singlyIndirect);
-        blockNo = singlyIndirect[whichBlock%256]
+        blockNo = singlyIndirect[whichBlock%256];
     }
-    readFromSD(2*blockNo,data,offset,size)
+    readFromSD(2*blockNo,data,offset,1);
 }
 
 void getInode(int index,struct ext2_inode *in){
@@ -277,7 +278,7 @@ void getInfo(uint32_t *num_songs, uint32_t *song_inodes){
     for(i = 0; i < directMax;i++){
         getInnerFiles(in.i_block[i],song_inodes,&entriesIdx);
     }
-    *num_songs = entries_idx;
+    *num_songs = entriesIdx;
 
 }
 

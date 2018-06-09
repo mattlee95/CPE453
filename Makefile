@@ -10,8 +10,8 @@ DEVICE = /dev/tty.usbmodem1421
 
 #target for part 1
 
-program_5: os.c serial.c synchro.c program5.c SdReader.c dbuffer.c
-	avr-gcc -mmcu=atmega2560 -DF_CPU=16000000 -O2 -o project5.elf os.c serial.c synchro.c program5.c SdReader.c dbuffer.c
+program_5: os.c serial.c synchro.c program5.c SdReader.c dbuffer.c ext2reader.c ext2.c
+	avr-gcc -mmcu=atmega2560 -DF_CPU=16000000 -O2 -o project5.elf os.c serial.c synchro.c program5.c SdReader.c dbuffer.c ext2reader.c ext2.c
 	avr-objcopy -O ihex project5.elf main.hex
 	avr-size project5.elf
 

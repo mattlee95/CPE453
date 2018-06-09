@@ -97,7 +97,7 @@ void save_value(int a){
     ret = save_to_buffer(&db, byte);
     while(ret == -1){
         save_to_buffer(&db, byte);
-        sleep(1);
+        thread_sleep(1);
     }
 }
 
