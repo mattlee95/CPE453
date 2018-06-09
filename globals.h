@@ -3,6 +3,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include <stdint.h>
 //place defines and prototypes here
 char song_name[100];
 uint32_t curr_song_idx;

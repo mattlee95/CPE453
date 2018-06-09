@@ -2,11 +2,11 @@
 #include <avr/interrupt.h>
 #include "globals.h"
 #include "os.h"
-#include "ext2.h"
 #include <util/delay.h>
 #include <stdlib.h>
 #include "ext2.h"
 #include "SdReader.h"
+#include "ext2reader.h"
 #include "serial.h"
 #include "dbuffer.h"
 
@@ -58,10 +58,10 @@ void changeSong(){
     // Change song_name
     getSongTitle(curr_inode,song_name);
     //Change song_dur
-    getSongDur(curr_inode,&song_dur);    
+    getSongDuration(curr_inode,&song_dur);    
 }
 
-void nextSong(){
+void next_song(){
     // Change curr_song_idx
     curr_song_idx++;
     curr_song_idx %= num_songs;
@@ -70,7 +70,7 @@ void nextSong(){
 }
 
 
-void prevSong(){
+void prev_song(){
     // Change curr_song_idx
     curr_song_idx = curr_song_idx == 0 ? num_songs-1 : curr_song_idx - 1;
     //Do the rest
@@ -78,13 +78,13 @@ void prevSong(){
 }
 
 void globals_init(){
-    getInitialInfo()
+    getInitialInfo();
     curr_song_idx = 0;
     curr_dur = 0;
     getInfo(&num_songs,&song_inodes); //Initializes num_songs and song_inodes
     uint32_t curr_inode = song_inodes[curr_song_idx]; 
     getSongTitle(curr_inode,song_name); //Initializes song_name
-    getSongDur(curr_inode,&song_dur); //Initializes song_dur
+    getSongDuration(curr_inode,&song_dur); //Initializes song_dur
 }
 
 void save_value(int a){
@@ -92,7 +92,7 @@ void save_value(int a){
     uint8_t byte;
     int ret;
     // What is blockNo
-    getSongByte(blockNo,curr_dur,data);
+    getSongByte(song_inodes[curr_song_idx],curr_dur,data);
     byte = data[0];
     ret = save_to_buffer(&db, byte);
     while(ret == -1){
@@ -111,7 +111,7 @@ void display_song_stats()
         in = read_byte();
         if (in == 'n')
         {
-            nextSong();
+            next_song();
         }
         if (in == 'p')
         {

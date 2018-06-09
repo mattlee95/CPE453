@@ -264,7 +264,7 @@ void getInnerFiles(uint32_t blockNo,uint32_t* song_inodes,uint32_t *idx){
 }
 
 
-void getInfo(uint32_t *num_songs uint32_t *song_inodes){
+void getInfo(uint32_t *num_songs, uint32_t *song_inodes){
     struct ext2_inode in;
     getInode(2, &in);
     if(!isDirectory(&in)){
