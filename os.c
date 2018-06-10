@@ -33,7 +33,8 @@ ISR(TIMER0_COMPA_vect) {
     remove_sleep();
 
     old_thread = sys.curr_thread_id;
-    new_thread = get_next_thread();
+    //new_thread = get_next_thread();
+    new_thread = 0;
 
     //sys.interrupts = sys.interrupts + 1;
     sys.interrupts++;
@@ -249,7 +250,7 @@ uint8_t get_next_thread(void)
     {
         next_thread = (next_thread + 1) % (sys.num_threads);
     }
-    if (next_thread == 0)
+    /*if (next_thread == 0)
     {
         for (n = 1; n < sys.num_threads; n++)
         {
@@ -259,7 +260,7 @@ uint8_t get_next_thread(void)
             }
         }
         return next_thread;
-    }
+    }*/
     return next_thread;
 }
 

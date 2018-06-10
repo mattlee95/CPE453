@@ -17,8 +17,7 @@ double_buff db;
 
 struct mutex_t mutex;
 
-void display_song_stats();
-void speak_value();
+void send_value_to_speaker();
 void idle();
 void print_stats();
 
@@ -27,7 +26,7 @@ void next_song();
 void prev_song();
 void globals_init();
 void save_value(int a);
-
+void display_bounded_buffer();
 
 uint8_t val;
 
@@ -45,35 +44,26 @@ int main(void) {
     }
     start_audio_pwm();
 
-    print_string("here 1");
-    
-    //globals_init();
-
-    print_string("here 2");
+    globals_init();
 
     os_init();
-    
-    print_string("here 3");
 
-    create_thread("idle", (uint16_t) idle, 0, 500);
-    //create_thread("save value", (uint16_t) save_value, &val, 500);
-    //create_thread("speak value", (uint16_t) speak_value, 0, 500);
-    //create_thread("save value", (uint16_t) save_value, &val, 500);
-    create_thread("display song stats", (uint16_t) display_song_stats, 0, 500);
-    create_thread("stats", (uint16_t) print_stats, 0, 500);
     //create_thread("idle", (uint16_t) idle, 0, 500);
-
-    print_string("here 4");
-
-    start_audio_pwm();
-
-    print_string("here 5");
+    create_thread("speak", (uint16_t) send_value_to_speaker, 0, 500);
+    create_thread("save value", (uint16_t) save_value, &val, 500);
+    //create_thread("song stats", (uint16_t) display_bounded_buffer, 0, 500);
+    create_thread("stats", (uint16_t) print_stats, 0, 500);
+    create_thread("idle", (uint16_t) idle, 0, 500);
 
     mutex_init(&mutex);
 
-    print_string("here 6");
+    clear_screen();
 
     os_start(); 
+
+    while (1)
+    {
+    }
 }
 
 void changeSong(){
@@ -113,71 +103,44 @@ void globals_init(){
     getSongDuration(curr_inode,(uint32_t*)&song_dur); //Initializes song_dur
 }
 
-void save_value(int a){
-    uint8_t data[1];
-    uint8_t byte;
-    int ret;
-    // What is blockNo
-    getSongByte(song_inodes[curr_song_idx],curr_dur,data);
-    byte = data[0];
-    ret = save_to_buffer(&db, byte);
-    while(ret == -1){
-        save_to_buffer(&db, byte);
-        thread_sleep(1);
-    }
-}
-
-void display_song_stats()
+void send_value_to_speaker()
 {
-    int row = 1;
-    char in;
     while (1)
     {
-        while (byte_available() == 1)
-        {
-            in = read_byte();
-            if (in == 'n')
-            {
-                next_song();
-            }
-            if (in == 'p')
-            {
-                prev_song();
-            }
-        }
-        mutex_lock(&mutex);
-        set_cursor(row,0);
-        print_string("Song Name: ");
-        print_string(song_name);
-        row++;
-
-        set_cursor(row,0);
-        print_string("Seconds In: ");
-        print_int(curr_dur);
-        print_string("   ");
-        row++;
-
-        set_cursor(row,0);
-        print_string("Total Duration: ");
-        print_int(song_dur);
-        print_string("   ");
-        row++;
-        mutex_unlock(&mutex);
         yield();
     }
 }
 
-void speak_value()
+void save_value(int a){
+    while (1)
+    {
+        uint8_t data[1];
+        uint8_t byte;
+        int ret;
+        // What is blockNo
+        //getSongByte(song_inodes[curr_song_idx],curr_dur,data);
+        byte = data[0];
+        //ret = save_to_buffer(&db, byte);
+        while(ret == -1){
+            //save_to_buffer(&db, byte);
+            yield();
+        }
+        yield();
+    }
+}
+
+/*void speak_value()
 {
     //do the speaker stuff
-    uint8_t value;
-    int ret = 1;
     while (1)
-        ret = speak_from_buffer(&db, &value);
-
+    {
+        uint8_t sp_value;
+        int ret = 1;
+        //ret = speak_from_buffer(&db, &value);
+        print_string("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
         if (ret > 0)
         {
-            OCR2B = value;
+            //OCR2B = value;
             //OCR2B = val;
             yield();
         }
@@ -185,9 +148,10 @@ void speak_value()
         {
             yield();
         }
-}
-
-
+        yield();
+        
+    }
+}*/
 
 void idle()
 {
@@ -199,7 +163,43 @@ void idle()
 
 }
 
+void display_bounded_buffer()
+{
+    while (1)
+    {
+        //sem_wait(&semaphore_print);
+        mutex_lock(&mutex);
+        int row = 1;
+        int n;
+        set_cursor(row,40);
+        print_string("BOUNDED BUFFER");
+        row++;
+        row++;
 
+        set_cursor(row,40);
+        print_string("Buffer Fill: ");
+        print_string(" ");
+        row++;
+
+
+        set_cursor(row,40);
+        print_string("Produce Rate: ");
+        print_string(" ");
+        row++;
+
+        set_cursor(row,40);
+        print_string("Comsume Rate: ");
+        print_string(" ");
+        row++;
+        row++;
+        row++;
+        set_cursor(row,40);
+        print_string("|");
+        print_string("|");
+        mutex_unlock(&mutex);
+        yield();
+    }
+}
 
 
 void print_stats()
@@ -215,6 +215,12 @@ void print_stats()
         row++;
         print_string("System Time: ");
         print_int32(sys.sys_time/100);//iterations);
+
+        set_cursor(row,0);
+        print_string("Song: ");
+        song_name[10] = '\0';
+        print_string(song_name);
+        row++;
 
         set_cursor(row,0);
         row++;
