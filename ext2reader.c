@@ -114,42 +114,8 @@ uint16_t fileFormat(struct ext2_inode *in){
     return in->i_mode & 0xF000;
 }
 
-
-char getMode(uint16_t mode){
-    if(mode==EXT2_S_IFSOCK){
-        return 'S';
-    }
-    else if(mode==EXT2_S_IFLNK){
-        return 'L';
-    }
-    else if(mode==EXT2_S_IFREG){
-        return 'F';
-    }
-    else if(mode==EXT2_S_IFBLK){
-        return 'B';
-    }
-    else if(mode==EXT2_S_IFDIR){
-        return 'D';
-    }
-    else if(mode==EXT2_S_IFCHR){
-        return 'C';
-    }
-    else if(mode==EXT2_S_IFIFO){
-        return 'Q';
-    }else{
-        return 'X';
-    }
-}
-
 int isDirectory(struct ext2_inode *in){
     if(fileFormat(in) == EXT2_S_IFDIR){
-        return 1;
-    }
-    return 0;
-}
-
-int isFile(struct ext2_inode *in){
-    if(fileFormat(in) == EXT2_S_IFREG){
         return 1;
     }
     return 0;
@@ -167,23 +133,6 @@ void getInitialInfo(){
     set_blocks_per_group(sb->s_blocks_per_group);
 }
 
-void printEntries(char **entries,uint32_t size){
-    uint32_t i;
-    for(i=0;i<size;i++){
-        printf("%s",entries[i]);
-    }
-}
-
-void printBlock(uint32_t blockNo,uint32_t count, uint32_t size){
-    uint8_t block[1024];
-    uint16_t i;
-    readBlock(blockNo,block);
-    uint32_t max=size-count>1024?1024:size-count;
-    for(i=0;i<max;i++){
-        printf("%c",block[i]);
-    }
-}
-
 void getInnerFiles(uint32_t blockNo,uint32_t* song_inodes,uint32_t *idx){
     uint8_t block[1024];
     uint16_t i=0;
@@ -192,7 +141,7 @@ void getInnerFiles(uint32_t blockNo,uint32_t* song_inodes,uint32_t *idx){
     while(i<1023){
         temp = (struct ext2_dir_entry *)&(block[i]);
         //song_inodes[*idx] = temp->inode;
-        song_inodes[*idx] = temp->rec_len;
+        song_inodes[*idx] = temp->inode;
         (*idx)++;
         i+=temp->rec_len;
     }

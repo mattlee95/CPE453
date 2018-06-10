@@ -209,7 +209,7 @@ void print_stats()
         row++;
         print_string("System Time: ");
         //print_int32(sys.sys_time/100);//iterations);
-        print_int32(song_inodes[0]);
+        print_int32(song_inodes[1]);
         set_cursor(row,0);
         print_string("Song: ");
         song_name[10] = '\0';
