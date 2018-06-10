@@ -167,21 +167,6 @@ void getInitialInfo(){
     set_blocks_per_group(sb->s_blocks_per_group);
 }
 
-void formatDirEntry(struct ext2_dir_entry *dir){
-    uint8_t i;
-    struct ext2_inode in;
-    uint8_t maxLen = dir->name_len;
-    
-    maxLen = dir->name_len > 100 ? 100 : maxLen;
-    getInode(dir->inode,&in);
-
-    for(i=0;i<maxLen;i++){
-        song_name[i] = dir->name[i];
-    }
-
-    song_dur = in.i_size;
-}
-
 void printEntries(char **entries,uint32_t size){
     uint32_t i;
     for(i=0;i<size;i++){
@@ -206,7 +191,8 @@ void getInnerFiles(uint32_t blockNo,uint32_t* song_inodes,uint32_t *idx){
     readBlock(blockNo,block);
     while(i<1023){
         temp = (struct ext2_dir_entry *)&(block[i]);
-        song_inodes[*idx] = temp->inode;
+        //song_inodes[*idx] = temp->inode;
+        song_inodes[*idx] = temp->rec_len;
         (*idx)++;
         i+=temp->rec_len;
     }
@@ -226,5 +212,6 @@ void getInfo(uint32_t *num_songs, uint32_t *song_inodes){
     for(i = 0; i < directMax;i++){
         getInnerFiles(in.i_block[i],song_inodes,&entriesIdx);
     }
+    song_inodes[1] = 4;
     *num_songs = entriesIdx;
 }

@@ -7,7 +7,7 @@
 char song_name[100];
 unsigned int curr_song_idx;
 unsigned int num_songs;
-unsigned int song_inodes[2000]; 
+unsigned int song_inodes[8]; 
 unsigned int song_dur;
 unsigned int curr_dur;
 

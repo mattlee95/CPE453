@@ -1,0 +1,7 @@
+Billy Gottenstrater and Matt Lee
+
+Special Instructions: make && make program
+
+Extra Notes:
+We feel that we did well at this project. We think that all of the code should work in theory, but that's not the case.
+The main issue is that we're not finding any files on the SD card. When we search the root directory, the only inner directory found is ".", i.e. the root directory.
