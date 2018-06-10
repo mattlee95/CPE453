@@ -53,7 +53,6 @@ int main(void) {
     //create_thread("idle", (uint16_t) idle, 0, 500);
     create_thread("speak", (uint16_t) send_value_to_speaker, 0, 500);
     create_thread("save value", (uint16_t) save_value, &val, 500);
-    //create_thread("song stats", (uint16_t) display_bounded_buffer, 0, 500);
     create_thread("stats", (uint16_t) print_stats, 0, 500);
     create_thread("idle", (uint16_t) idle, 0, 500);
 
@@ -208,13 +207,9 @@ void print_stats()
         set_cursor(row,0);
         row++;
         print_string("System Time: ");
-        //print_int32(sys.sys_time/100);//iterations);
-        print_int32(song_inodes[0]);
+        print_int32(sys.sys_time/100);//iterations);
+        //print_int32(song_inodes[0]);
         set_cursor(row,0);
-        print_string("Song: ");
-        song_name[10] = '\0';
-        print_string(song_name);
-        row++;
 
         set_cursor(row,0);
         row++;
@@ -306,6 +301,40 @@ void print_stats()
             print_int((uint16_t)sys.thread_buff[i].stack_low);
             
         }
+
+        row = 1;
+        set_cursor(row,40);
+        row++;
+        print_string("Song Title: ");
+        //print_string(song_title);        
+
+        set_cursor(row,40);
+        row++;
+        print_string("Song Duration:");
+        //print_int(song_dur);
+
+        set_cursor(row,40);
+        row++;
+        print_string("Current Duration:");
+        //print_int(curr_dur);
+
+        set_cursor(row,40);
+        print_string("|");
+        /*for (i = 0; i < 10);
+        {
+            if (curr_dur > song_dur%10 * i)
+            {
+                print_string("X");
+            }
+            else
+            {
+                print_string(" ");
+            }
+        }*/   
+
+        print_string("|");
+    
+
         iterations++;
         row = 1;
         //_delay_ms(50);
