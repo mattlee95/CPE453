@@ -6,18 +6,28 @@
 #include <stdlib.h>
 #include "ext2.h"
 #include "SdReader.h"
-#include "ext2reader.h"
 #include "serial.h"
 #include "dbuffer.h"
+#include "synchro.h"
+#include "ext2reader.h"
 
 extern system_t sys;
 
 double_buff db;
 
+struct mutex_t mutex;
+
 void display_song_stats();
 void speak_value();
 void idle();
 void print_stats();
+
+void changeSong();
+void next_song();
+void prev_song();
+void globals_init();
+void save_value(int a);
+
 
 uint8_t val;
 
@@ -25,29 +35,45 @@ int main(void) {
 
     val = 0;
 
-    os_init();
+    serial_init();
 
     uint8_t sd_card_status;
-
     sd_card_status = sdInit(1);   //initialize the card with slow clock
+    if (sd_card_status == 0)
+    {
+        print_string("BAD SD CARD INIT");
+    }
+    start_audio_pwm();
 
-    serial_init(); 
+    print_string("here 1");
     
-    globals_init();
-    print_string("HERE");
+    //globals_init();
+
+    print_string("here 2");
+
+    os_init();
     
+    print_string("here 3");
+
     create_thread("idle", (uint16_t) idle, 0, 500);
     //create_thread("save value", (uint16_t) save_value, &val, 500);
     //create_thread("speak value", (uint16_t) speak_value, 0, 500);
-    //create_thread("display song stats", (uint16_t) display_song_stats, 0, 500);
+    //create_thread("save value", (uint16_t) save_value, &val, 500);
+    create_thread("display song stats", (uint16_t) display_song_stats, 0, 500);
     create_thread("stats", (uint16_t) print_stats, 0, 500);
-    print_string("HERE2");
+    //create_thread("idle", (uint16_t) idle, 0, 500);
+
+    print_string("here 4");
 
     start_audio_pwm();
-    print_string("HERE3");
 
-    os_start();   
-    while (1) {}
+    print_string("here 5");
+
+    mutex_init(&mutex);
+
+    print_string("here 6");
+
+    os_start(); 
 }
 
 void changeSong(){
@@ -105,35 +131,40 @@ void display_song_stats()
 {
     int row = 1;
     char in;
-
-    while (byte_available() == 1)
+    while (1)
     {
-        in = read_byte();
-        if (in == 'n')
+        while (byte_available() == 1)
         {
-            next_song();
+            in = read_byte();
+            if (in == 'n')
+            {
+                next_song();
+            }
+            if (in == 'p')
+            {
+                prev_song();
+            }
         }
-        if (in == 'p')
-        {
-            prev_song();
-        }
+        mutex_lock(&mutex);
+        set_cursor(row,0);
+        print_string("Song Name: ");
+        print_string(song_name);
+        row++;
+
+        set_cursor(row,0);
+        print_string("Seconds In: ");
+        print_int(curr_dur);
+        print_string("   ");
+        row++;
+
+        set_cursor(row,0);
+        print_string("Total Duration: ");
+        print_int(song_dur);
+        print_string("   ");
+        row++;
+        mutex_unlock(&mutex);
+        yield();
     }
-    set_cursor(row,0);
-    print_string("Song Name: ");
-    print_string(song_name);
-    row++;
-
-    set_cursor(row,0);
-    print_string("Seconds In: ");
-    print_int(curr_dur);
-    print_string("   ");
-    row++;
-
-    set_cursor(row,0);
-    print_string("Total Duration: ");
-    print_int(song_dur);
-    print_string("   ");
-    row++;
 }
 
 void speak_value()
@@ -142,19 +173,17 @@ void speak_value()
     uint8_t value;
     int ret = 1;
     while (1)
-        //ret = speak_from_buffer(&db, &value);
-        print_string("X");
-        val = val + 10;    
+        ret = speak_from_buffer(&db, &value);
 
         if (ret > 0)
         {
-            //OCR2B = value;
-            OCR2B = val;
-            thread_sleep(1);
+            OCR2B = value;
+            //OCR2B = val;
+            yield();
         }
         else
         {
-            thread_sleep(1);
+            yield();
         }
 }
 
@@ -165,8 +194,6 @@ void idle()
     int i;
     while(1)
     {
-        //noop
-        print_string("Z");
         i = 0;
     }
 
@@ -183,7 +210,7 @@ void print_stats()
     sys.sys_time = 0;
     while(1)
     {
-
+        mutex_lock(&mutex);
         set_cursor(row,0);
         row++;
         print_string("System Time: ");
@@ -282,8 +309,8 @@ void print_stats()
         iterations++;
         row = 1;
         //_delay_ms(50);
-        //mutex_unlock(&mutex);
+        mutex_unlock(&mutex);
         //sem_signal(&semaphore_print);
-        thread_sleep(5);
+        yield();
     }
 }

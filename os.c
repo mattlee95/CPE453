@@ -28,14 +28,15 @@ ISR(TIMER0_COMPA_vect) {
    //Call get_next_thread to get the thread id of the next thread to run
    //Call context switch here to switch to that next thread
 
-    uint8_t new_thread, old_thread;
+    volatile uint8_t new_thread, old_thread;
 
     remove_sleep();
 
     old_thread = sys.curr_thread_id;
     new_thread = get_next_thread();
 
-    sys.interrupts = sys.interrupts + 1;
+    //sys.interrupts = sys.interrupts + 1;
+    sys.interrupts++;
 
     sys.curr_thread_id = new_thread;
     sys.thread_buff[new_thread].sched++;
@@ -64,27 +65,19 @@ ISR(TIMER1_COMPA_vect)
 }
 
 //Call this to start the system timer interrupt
-void start_system_timer() {
-   TIMSK0 |= _BV(OCIE0A);  /* IRQ on compare.  */
-   TCCR0A |= _BV(WGM01); //clear timer on compare match
+/*void start_system_timer() {
+   TIMSK0 |= _BV(OCIE0A);  //interrupt on compare match
+   TCCR0A |= _BV(WGM01);   //clear timer on compare match
 
-   //22KHz settings
-   TCCR0B |= _BV(CS01); //prescalar /8
-   OCR0A = 90; //generate interrupt every 45 microseconds
+   //Generate timer interrupt every ~10 milliseconds
+   TCCR0B |= _BV(CS02) | _BV(CS00) | _BV(CS02);    //prescalar /1024
+   OCR0A = 156;             //generate interrupt every 9.98 milliseconds
 
-   //start timer 1 to generate interrupt every 1 second
-   OCR1A = 15625;
-   TIMSK1 |= _BV(OCIE1A);  /* IRQ on compare.  */
-   TCCR1B |= _BV(WGM12) | _BV(CS12) | _BV(CS10); //slowest prescalar /1024
-}
-
-void start_audio_pwm() {
-   //run timer 2 in fast pwm mode
-   TCCR2A |= _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
-   TCCR2B |= _BV(CS20);
-
-   DDRH |= _BV(PH6); //make OC2B an output
-}
+    //start timer 1 to generate interrupt every 1 second
+    OCR1A = 15625;
+    TIMSK1 |= _BV(OCIE1A);  //interrupt on compare
+    TCCR1B |= _BV(WGM12) | _BV(CS12) | _BV(CS10); //slowest prescalar /1024
+}*/
 
 __attribute__((naked)) void context_switch(uint16_t* new_sp, uint16_t* old_sp)
 {
@@ -183,9 +176,7 @@ __attribute__((naked)) void thread_start(void)
 
 void os_init(void)
 {
-    //init system_t
     cli();
-    start_system_timer();
     sys.curr_thread_id = 0;
     sys.num_threads = 0;
     sys.interrupts = 0;
@@ -245,21 +236,20 @@ void os_start(void)
 {
     uint16_t starting_ptr;
     start_system_timer();
-    sei();    
+    //sei();    
     context_switch(&sys.thread_buff[0].stack_pointer, &starting_ptr);
 }
 
 uint8_t get_next_thread(void)
 {
-    //uint8_t next_thread = ((sys.curr_thread_id + 1) % (sys.num_threads));
-    uint8_t next_thread = 1;
+    uint8_t next_thread = ((sys.curr_thread_id + 1) % (sys.num_threads));
     uint8_t n;
 
     while (sys.thread_buff[next_thread].status != THREAD_READY)
     {
         next_thread = (next_thread + 1) % (sys.num_threads);
     }
-    /*if (next_thread == 0)
+    if (next_thread == 0)
     {
         for (n = 1; n < sys.num_threads; n++)
         {
@@ -269,7 +259,7 @@ uint8_t get_next_thread(void)
             }
         }
         return next_thread;
-    }*/
+    }
     return next_thread;
 }
 
