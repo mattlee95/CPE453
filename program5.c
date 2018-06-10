@@ -34,6 +34,8 @@ int main(void) {
 
     val = 0;
 
+    initialize_double_buffer(&db);
+
     serial_init();
 
     uint8_t sd_card_status;
@@ -107,51 +109,43 @@ void send_value_to_speaker()
 {
     while (1)
     {
+        uint8_t ret_val;
+        int ret = speak_from_buffer(&db, &ret_val);
+        while (ret == -1)
+        {
+            yield();
+            ret = speak_from_buffer(&db, &ret_val);
+        }
+        OCR2B = ret_val;
         yield();
     }
 }
 
 void save_value(int a){
+    
+    uint8_t value = 0;
     while (1)
     {
         uint8_t data[1];
         uint8_t byte;
         int ret;
+        value = value + 25;
+        if ((value > 240) || (value < 25))
+        {
+            value = 0;
+        }
         // What is blockNo
         //getSongByte(song_inodes[curr_song_idx],curr_dur,data);
         byte = data[0];
         //ret = save_to_buffer(&db, byte);
+        ret = save_to_buffer(&db, value);
         while(ret == -1){
-            //save_to_buffer(&db, byte);
+            ret = save_to_buffer(&db, value);
             yield();
         }
         yield();
     }
 }
-
-/*void speak_value()
-{
-    //do the speaker stuff
-    while (1)
-    {
-        uint8_t sp_value;
-        int ret = 1;
-        //ret = speak_from_buffer(&db, &value);
-        print_string("FUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK");
-        if (ret > 0)
-        {
-            //OCR2B = value;
-            //OCR2B = val;
-            yield();
-        }
-        else
-        {
-            yield();
-        }
-        yield();
-        
-    }
-}*/
 
 void idle()
 {
