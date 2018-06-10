@@ -70,7 +70,7 @@ void changeSong(){
     // Change curr_dur to 0
     curr_dur = 0;
     //get current inode number 
-    uint32_t curr_inode = song_inodes[curr_song_idx];
+    uint32_t curr_inode =3;//= song_inodes[curr_song_idx];
     // Change song_name
     getSongTitle(curr_inode,song_name);
     //Change song_dur
@@ -214,8 +214,8 @@ void print_stats()
         set_cursor(row,0);
         row++;
         print_string("System Time: ");
-        print_int32(sys.sys_time/100);//iterations);
-
+        //print_int32(sys.sys_time/100);//iterations);
+        print_int32(song_inodes[0]);
         set_cursor(row,0);
         print_string("Song: ");
         song_name[10] = '\0';
