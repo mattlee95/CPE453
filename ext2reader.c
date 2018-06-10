@@ -7,6 +7,22 @@
 #include <string.h>
 #include <math.h>
 
+void readBlock(uint32_t blockNo, uint8_t *data){
+    sdReadData(2*blockNo,0,data,512);
+    sdReadData(2*blockNo+1,0,&(data[512]),512);
+}
+
+void getInode(int index,struct ext2_inode *in){
+    uint32_t group_number = (uint32_t)floor(index/(inodes_per_group()));
+    uint32_t group_start = group_number*blocks_per_group()+1;
+    uint32_t inodes_start = group_start+4;
+    //relative_inode is inode as if the first index in this block group is 0
+    uint32_t relative_inode = ((index-1) % inodes_per_group());
+    uint32_t extra_chunks = (uint32_t)floor(relative_inode/4);
+    uint16_t offset = (uint16_t)(128*(relative_inode%4));
+    sdReadData(2*inodes_start+extra_chunks,offset,(uint8_t*)in,128);
+}
+
 uint32_t findInodeFromBlock(uint32_t blockNo, uint32_t inodeNo, char* name){
     uint8_t block[1024];
     uint16_t i=0;
@@ -52,11 +68,6 @@ void getSongDuration(uint32_t inode, uint32_t *song_dur){
     *song_dur = in.i_size;
 }
 
-void readBlock(uint32_t blockNo, uint8_t *data){
-    sdReadData(2*blockNo,0,data,512);
-    sdReadData(2*blockNo+1,0,&(data[512]),512);
-}
-
 
 void readFromSD(uint32_t blockNo, uint8_t *data, uint16_t offset, uint16_t size){
     uint32_t bn = 2*blockNo;
@@ -97,17 +108,6 @@ void getSongByte(uint32_t inode_number,uint32_t byteLoc, uint8_t *data){
         blockNo = singlyIndirect[whichBlock%256];
     }
     readFromSD(2*blockNo,data,offset,1);
-}
-
-void getInode(int index,struct ext2_inode *in){
-    uint32_t group_number = (uint32_t)floor(index/(inodes_per_group()));
-    uint32_t group_start = group_number*blocks_per_group()+1;
-    uint32_t inodes_start = group_start+4;
-    //relative_inode is inode as if the first index in this block group is 0
-    uint32_t relative_inode = ((index-1) % inodes_per_group());
-    uint32_t extra_chunks = (uint32_t)floor(relative_inode/4);
-    uint16_t offset = (uint16_t)(128*(relative_inode%4));
-    sdReadData(2*inodes_start+extra_chunks,offset,(uint8_t*)in,128);
 }
 
 uint16_t fileFormat(struct ext2_inode *in){
@@ -199,58 +199,6 @@ void printBlock(uint32_t blockNo,uint32_t count, uint32_t size){
     }
 }
 
-void printFileContents(uint32_t inode){
-    struct ext2_inode in;
-    getInode(inode,&in);
-    if(isDirectory(&in)){
-        printf("Cannot print this, because it is a directory!\n");
-        exit(0);
-    }
-    uint32_t numPtrBlocks = in.i_blocks / 2;
-    //Go through 12 direct blocks
-    uint32_t directMax = (numPtrBlocks > 12 ? 12 : numPtrBlocks);
-    uint32_t singleMax = (numPtrBlocks > 256+12 ? 256 : numPtrBlocks);
-    uint32_t doubleMax = (numPtrBlocks > 256*256+12 ? 256*256 : numPtrBlocks);
-    uint32_t i;
-    //Go through singly indirect blocks
-    uint32_t size = in.i_size;
-    uint32_t count = 0;
-    for(i = 0; i < directMax;i++){
-        printBlock(in.i_block[i],count,size);
-        count+=1024;
-        if(count >= size){
-            return;
-        }
-    }
-    //Go through singly indirect blocks
-    uint32_t singlyIndirect[256];
-    readBlock(in.i_block[12],(uint8_t*)singlyIndirect);
-    for(i = 0; i < singleMax;i++){
-        printBlock(singlyIndirect[i],count,size);
-        count+=1024;
-        if(count >= size){
-            return;
-        }
-    }
-    //Go through doubly indirect blocks
-    uint32_t doublyIndirect[256];
-    uint32_t currentBlock[256];
-    int doubleIdx = -1;
-    readBlock(in.i_block[13],(uint8_t*)doublyIndirect);
-    for(i = 0; i < doubleMax;i++){
-        uint32_t idx=i%256;
-        if(idx == 0){
-            doubleIdx++;
-            readBlock(doublyIndirect[doubleIdx],(uint8_t*)currentBlock);
-        }
-        printBlock(currentBlock[idx],count,size);
-        count+=1024;
-        if(count >= size){
-            return;
-        }
-    }
-}
-
 void getInnerFiles(uint32_t blockNo,uint32_t* song_inodes,uint32_t *idx){
     uint8_t block[1024];
     uint16_t i=0;
@@ -279,55 +227,4 @@ void getInfo(uint32_t *num_songs, uint32_t *song_inodes){
         getInnerFiles(in.i_block[i],song_inodes,&entriesIdx);
     }
     *num_songs = entriesIdx;
-
-}
-
-void printContents(uint32_t inode){
-    struct ext2_inode in;
-    getInode(inode,&in);
-    if(!isDirectory(&in)){
-        printf("Cannot print files within this, because it is not a directory!\n");
-        exit(0);
-    }
-    uint32_t numPtrBlocks = in.i_blocks / 2;
-    //Go through 12 direct blocks
-    uint32_t directMax = (numPtrBlocks > 12 ? 11 : numPtrBlocks);
-    uint32_t singleMax = (numPtrBlocks > 256+12 ? 256 : numPtrBlocks);
-    uint32_t doubleMax = (numPtrBlocks > 256*256+12 ? 256*256 : numPtrBlocks);
-    uint32_t i;
-    uint32_t entriesIdx = 0;
-    //Go through singly indirect blocks
-    //printf("name          size                     type\n");
-    char **entries = malloc(276*sizeof(char*));
-    for(i = 0; i < directMax;i++){
-        getInnerFiles(in.i_block[i],entries,&entriesIdx);
-    }
-    if(numPtrBlocks <= 12){
-        printEntries(entries,entriesIdx);
-        return;
-    }
-    //Go through singly indirect blocks
-    uint32_t singlyIndirect[256];
-    readBlock(in.i_block[12],(uint8_t*)singlyIndirect);
-    for(i = 0; i < singleMax;i++){
-        getInnerFiles(singlyIndirect[i],entries,&entriesIdx);
-    }
-    if(numPtrBlocks <= 12+256){
-        printEntries(entries,numPtrBlocks);
-        return;
-    }
-    //Go through doubly indirect blocks
-    uint32_t doublyIndirect[256];
-    uint32_t currentBlock[256];
-    int doubleIdx = -1;
-    readBlock(in.i_block[13],(uint8_t*)doublyIndirect);
-    for(i = 0; i < doubleMax;i++){
-        uint32_t idx=i%256;
-        if(idx == 0){
-            doubleIdx++;
-            readBlock(doublyIndirect[doubleIdx],(uint8_t*)currentBlock);
-        }
-        getInnerFiles(currentBlock[idx],entries,&entriesIdx);
-    }
-    printEntries(entries,numPtrBlocks);
 }

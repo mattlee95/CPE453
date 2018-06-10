@@ -84,7 +84,7 @@ void changeSong(){
     // Change song_name
     getSongTitle(curr_inode,song_name);
     //Change song_dur
-    getSongDuration(curr_inode,&song_dur);    
+    getSongDuration(curr_inode,(uint32_t*)&song_dur);    
 }
 
 void next_song(){
@@ -107,10 +107,10 @@ void globals_init(){
     getInitialInfo();
     curr_song_idx = 0;
     curr_dur = 0;
-    getInfo(&num_songs,&song_inodes); //Initializes num_songs and song_inodes
+    getInfo((uint32_t*)&num_songs,(uint32_t*)song_inodes); //Initializes num_songs and song_inodes
     uint32_t curr_inode = song_inodes[curr_song_idx]; 
     getSongTitle(curr_inode,song_name); //Initializes song_name
-    getSongDuration(curr_inode,&song_dur); //Initializes song_dur
+    getSongDuration(curr_inode,(uint32_t*)&song_dur); //Initializes song_dur
 }
 
 void save_value(int a){
